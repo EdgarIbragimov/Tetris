@@ -21,14 +21,13 @@ This project is a simple implementation of the classic Tetris game built with Ja
 - CSS3: Styling and layout.
 - JavaScript (ES6): Game logic, DOM manipulation, and interactions.
 - Nginx: Web server to serve the game.
-
+```
 ## Setup
 
 1. Clone the repository:
    ```bash
    git clone https://github.com/EdgarIbragimov/Tetris.git
    ```
-
 2. Install Nginx:
    - Follow the installation instructions for your operating system.
 
