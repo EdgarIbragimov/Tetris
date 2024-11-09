@@ -14,6 +14,7 @@ export class Tetris {
     this.isGameOver = false;
     this.score = 0;
     this.level = 0;
+    this.speed = 700;
     this.init();
   }
 
@@ -152,8 +153,13 @@ export class Tetris {
       if (newLevel > this.level) {
         this.level = newLevel;
         document.getElementById("level").innerText = this.level;
+        this.speed = Math.max(100, 700 - this.level * 10);
       }
     }
+  }
+
+  getSpeed() {
+    return this.speed;
   }
 
   removeFilledRows(filledRows) {

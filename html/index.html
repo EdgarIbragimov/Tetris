@@ -7,6 +7,7 @@
     <title>Вход</title>
     <link rel="icon" type="image/png" href="../resources/icon.png" />
     <link rel="stylesheet" href="../css/index.css" />
+    <script src="../scripts/script.js" type="module"></script>
   </head>
 
   <body>
@@ -19,11 +20,34 @@
         <span class="letter" style="color: #63e83a">i</span>
         <span class="letter" style="color: #db4437">s</span>
       </h1>
-      <script src="../scripts/utilities.js"></script>
-      <form action="tetris.html" method="get">
-        <input type="text" id="nickname" placeholder="Имя пользователя" />
-        <button onclick="store();">Готово!</button>
+      <form id="username-form" onsubmit="saveUsername(event)">
+        <input
+          type="text"
+          id="nickname"
+          placeholder="Имя пользователя"
+          required
+        />
+        <button type="submit">Готово!</button>
       </form>
     </div>
+
+    <script>
+      function saveUsername(event) {
+        event.preventDefault();
+        const username = document.getElementById("nickname").value.trim();
+        if (username) {
+          localStorage.setItem("tetris.username", username);
+          window.location.href = "tetris.html";
+        }
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        const nicknameInput = document.getElementById("nickname");
+        const lastUsername = localStorage.getItem("tetris.username");
+        if (lastUsername) {
+          nicknameInput.value = lastUsername;
+        }
+      });
+    </script>
   </body>
 </html>

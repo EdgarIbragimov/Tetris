@@ -65,8 +65,3 @@ export function rotateMatrix(matrix) {
   }
   return rotatedMatrix;
 }
-
-export function store() {
-  const username = document.getElementById("username").value;
-  localStorage.setItem("tetris.username", username);
-}
