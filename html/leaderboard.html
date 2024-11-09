@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Таблица рекордов - Tetris</title>
+    <link rel="stylesheet" href="../css/leaderboard.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h1>Таблица рекордов</h1>
+      <table id="leaderboard">
+        <thead>
+          <tr>
+            <th>Место</th>
+            <th>Имя</th>
+            <th>Очки</th>
+            <th>Уровень</th>
+            <th>Дата</th>
+          </tr>
+        </thead>
+        <tbody id="leaderboard-body"></tbody>
+      </table>
+      <div class="buttons">
+        <button onclick="window.location.href='index.html'">Новая игра</button>
+        <button onclick="clearLeaderboard()">Очистить таблицу</button>
+      </div>
+    </div>
+    <script type="module">
+      // Импортируем функции напрямую в HTML
+      import {
+        displayLeaderboard,
+        clearLeaderboard,
+      } from "../scripts/leaderboard.js";
+
+      // Делаем функции доступными глобально
+      window.clearLeaderboard = clearLeaderboard;
+
+      // Отображаем таблицу при загрузке
+      document.addEventListener("DOMContentLoaded", displayLeaderboard);
+    </script>
+  </body>
+</html>
