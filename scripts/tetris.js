@@ -11,6 +11,7 @@ export class Tetris {
   constructor() {
     this.playField;
     this.tetromino;
+    this.nextTetromino;
     this.isGameOver = false;
     this.score = 0;
     this.level = 0;
@@ -20,6 +21,7 @@ export class Tetris {
 
   init() {
     this.generatePlayField();
+    this.generateNextTetromino();
     this.generateTetromino();
   }
 
@@ -30,21 +32,30 @@ export class Tetris {
   }
 
   generateTetromino() {
+    // Используем следующую фигуру как текущую
+    this.tetromino = {
+      name: this.nextTetromino.name,
+      matrix: this.nextTetromino.matrix,
+      row: -2,
+      column: Math.floor(
+        PLAYFIELD_COLUMNS / 2 - this.nextTetromino.matrix.length / 2
+      ),
+      ghostRow: -2,
+      ghostColumn: 0,
+    };
+
+    // Генерируем новую следующую фигуру
+    this.generateNextTetromino();
+    this.calculateGhostPosition();
+  }
+
+  generateNextTetromino() {
     const name = getRandomElement(TETROMINO_NAMES);
     const matrix = TETROMINOES[name];
-
-    const column = PLAYFIELD_COLUMNS / 2 - Math.floor(matrix.length / 2);
-    const row = -2;
-
-    this.tetromino = {
+    this.nextTetromino = {
       name,
       matrix,
-      row,
-      column,
-      ghostColumn: column,
-      ghostRow: row,
     };
-    this.calculateGhostPosition();
   }
 
   moveTetrominoDown() {
