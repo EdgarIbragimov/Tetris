@@ -15,12 +15,12 @@ class Game {
     this.cells = document.querySelectorAll(".grid>div");
     this.player = new Player();
     this.isPlaying = false;
-
-    this.startGame = this.startGame.bind(this);
+    this.miniCells = document.querySelectorAll(".mini-grid>div");
+    this.onKeydown = this.onKeydown.bind(this);
   }
 
   initGame() {
-    this.initKeydown();
+    document.addEventListener("keydown", this.onKeydown);
   }
 
   startGame() {
@@ -38,11 +38,14 @@ class Game {
     this.moveDown();
   }
 
-  initKeydown() {
-    document.addEventListener("keydown", (event) => this.onKeydown(event));
-  }
-
   onKeydown(event) {
+    if (!this.isPlaying) {
+      if (event.key === "Enter") {
+        this.startGame();
+      }
+      return;
+    }
+
     switch (event.key) {
       case " ":
         this.rotate();
@@ -90,6 +93,7 @@ class Game {
     this.drawPlayField();
     this.drawTetromino();
     this.drawGhostTetromino();
+    this.drawNextTetromino();
   }
 
   drawPlayField() {
@@ -161,10 +165,44 @@ class Game {
     }
   }
 
+  // Новый метод для отрисовки следующей фигуры
+  drawNextTetromino() {
+    // Очищаем мини-сетку
+    this.miniCells.forEach((cell) => cell.removeAttribute("class"));
+
+    const nextTetromino = this.tetris.nextTetromino;
+    if (!nextTetromino) return;
+
+    const matrix = nextTetromino.matrix;
+    const matrixSize = matrix.length;
+
+    // Вычисляем смещение для центрирования фигуры
+    const offset = {
+      row: Math.floor((4 - matrixSize) / 2),
+      col: Math.floor((4 - matrixSize) / 2),
+    };
+
+    // Отрисовываем фигуру в мини-сетке
+    for (let row = 0; row < matrixSize; row++) {
+      for (let column = 0; column < matrixSize; column++) {
+        if (!matrix[row][column]) continue;
+
+        const cellIndex = (row + offset.row) * 4 + (column + offset.col);
+        if (cellIndex >= 0 && cellIndex < this.miniCells.length) {
+          this.miniCells[cellIndex].classList.add(nextTetromino.name);
+        }
+      }
+    }
+  }
+
   gameOver() {
     this.isPlaying = false;
     this.stopLoop();
+    // Удаляем старый обработчик перед добавлением нового
     document.removeEventListener("keydown", this.onKeydown);
+    // Добавляем обработчик заново
+    document.addEventListener("keydown", this.onKeydown);
+
     const leaderboardManager = new LeaderboardManager();
     leaderboardManager.addScore(
       this.player.username,
@@ -206,5 +244,9 @@ document.addEventListener("DOMContentLoaded", () => {
   game.initGame();
 
   // Делаем функцию startGame доступной глобально
-  window.startGame = () => game.startGame();
+  // window.startGame = () => game.startGame();
+  const startButton = document.querySelector("#start-button");
+  if (startButton) {
+    startButton.addEventListener("click", () => game.startGame());
+  }
 });
