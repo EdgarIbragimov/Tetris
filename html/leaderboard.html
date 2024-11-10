@@ -25,18 +25,6 @@
         <button onclick="clearLeaderboard()">Очистить таблицу</button>
       </div>
     </div>
-    <script type="module">
-      // Импортируем функции напрямую в HTML
-      import {
-        displayLeaderboard,
-        clearLeaderboard,
-      } from "../scripts/leaderboard.js";
-
-      // Делаем функции доступными глобально
-      window.clearLeaderboard = clearLeaderboard;
-
-      // Отображаем таблицу при загрузке
-      document.addEventListener("DOMContentLoaded", displayLeaderboard);
-    </script>
+    <script type="module" src="../scripts/leaderboard.js"></script>
   </body>
 </html>

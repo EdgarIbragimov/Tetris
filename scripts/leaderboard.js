@@ -1,13 +1,26 @@
 export class LeaderboardManager {
+  static STORAGE_KEY = "tetris.leaderboard";
+  static MAX_RECORDS = 10;
+
   constructor() {
-    this.leaderboard =
-      JSON.parse(localStorage.getItem("tetris.leaderboard")) || [];
+    this.loadLeaderboard();
+  }
+
+  loadLeaderboard() {
+    try {
+      this.leaderboard =
+        JSON.parse(localStorage.getItem(LeaderboardManager.STORAGE_KEY)) || [];
+    } catch (error) {
+      console.error("Error loading leaderboard:", error);
+      this.leaderboard = [];
+    }
   }
 
   addScore(username, score, level) {
-    const existingScoreIndex = this.leaderboard.findIndex(
-      (record) => record.username === username
-    );
+    if (!username || typeof score !== "number" || typeof level !== "number") {
+      console.error("Invalid score data");
+      return;
+    }
 
     const newScore = {
       username,
@@ -16,22 +29,32 @@ export class LeaderboardManager {
       date: new Date().toLocaleDateString(),
     };
 
+    const existingScoreIndex = this.leaderboard.findIndex(
+      (record) => record.username === username
+    );
+
     if (existingScoreIndex !== -1) {
-      const existingScore = this.leaderboard[existingScoreIndex];
-      if (score > existingScore.score) {
+      if (score > this.leaderboard[existingScoreIndex].score) {
         this.leaderboard[existingScoreIndex] = newScore;
       }
     } else {
       this.leaderboard.push(newScore);
     }
 
+    this.updateLeaderboard();
+  }
+
+  updateLeaderboard() {
     this.leaderboard.sort((a, b) => b.score - a.score);
-    this.leaderboard = this.leaderboard.slice(0, 10);
+    this.leaderboard = this.leaderboard.slice(
+      0,
+      LeaderboardManager.MAX_RECORDS
+    );
     this.saveToStorage();
   }
 
   getScores() {
-    return this.leaderboard;
+    return [...this.leaderboard];
   }
 
   clearLeaderboard() {
@@ -40,10 +63,14 @@ export class LeaderboardManager {
   }
 
   saveToStorage() {
-    localStorage.setItem(
-      "tetris.leaderboard",
-      JSON.stringify(this.leaderboard)
-    );
+    try {
+      localStorage.setItem(
+        LeaderboardManager.STORAGE_KEY,
+        JSON.stringify(this.leaderboard)
+      );
+    } catch (error) {
+      console.error("Error saving leaderboard:", error);
+    }
   }
 }
 
@@ -54,40 +81,40 @@ export function displayLeaderboard() {
   const leaderboardManager = new LeaderboardManager();
   const scores = leaderboardManager.getScores();
 
-  if (scores && Array.isArray(scores) && scores.length > 0) {
-    leaderboardBody.innerHTML = scores
-      .map(
-        (score, index) => `
-                <tr>
-                    <td>${index + 1}</td>
-                    <td>${score.username}</td>
-                    <td>${score.score}</td>
-                    <td>${score.level}</td>
-                    <td>${score.date}</td>
-                </tr>
-            `
-      )
-      .join("");
-  } else {
-    leaderboardBody.innerHTML = '<tr><td colspan="5">Нет результатов</td></tr>';
+  leaderboardBody.innerHTML = getLeaderboardHTML(scores);
+}
+
+function getLeaderboardHTML(scores) {
+  if (!Array.isArray(scores) || scores.length === 0) {
+    return '<tr><td colspan="5">Нет результатов</td></tr>';
   }
+
+  return scores.map((score, index) => createScoreRow(score, index)).join("");
+}
+
+function createScoreRow(score, index) {
+  return `
+      <tr>
+          <td>${index + 1}</td>
+          <td>${score.username}</td>
+          <td>${score.score}</td>
+          <td>${score.level}</td>
+          <td>${score.date}</td>
+      </tr>
+  `;
 }
 
 export function clearLeaderboard() {
-  if (confirm("Вы уверены, что хотите очистить таблицу рекордов?")) {
-    const leaderboardManager = new LeaderboardManager();
-    leaderboardManager.clearLeaderboard();
-    displayLeaderboard();
-  }
+  if (!confirm("Вы уверены, что хотите очистить таблицу рекордов?")) return;
+
+  const leaderboardManager = new LeaderboardManager();
+  leaderboardManager.clearLeaderboard();
+  displayLeaderboard();
 }
 
-// Инициализация при загрузке страницы
 if (typeof window !== "undefined") {
   document.addEventListener("DOMContentLoaded", () => {
     displayLeaderboard();
-
-    // Делаем функции доступными глобально
-    window.displayLeaderboard = displayLeaderboard;
-    window.clearLeaderboard = clearLeaderboard;
+    Object.assign(window, { displayLeaderboard, clearLeaderboard });
   });
 }
