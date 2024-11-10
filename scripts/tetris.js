@@ -31,8 +31,16 @@ export class Tetris {
       .map(() => new Array(PLAYFIELD_COLUMNS).fill(0));
   }
 
+  generateNextTetromino() {
+    const name = getRandomElement(TETROMINO_NAMES);
+    const matrix = TETROMINOES[name];
+    this.nextTetromino = {
+      name,
+      matrix,
+    };
+  }
+
   generateTetromino() {
-    // Используем следующую фигуру как текущую
     this.tetromino = {
       name: this.nextTetromino.name,
       matrix: this.nextTetromino.matrix,
@@ -43,19 +51,8 @@ export class Tetris {
       ghostRow: -2,
       ghostColumn: 0,
     };
-
-    // Генерируем новую следующую фигуру
     this.generateNextTetromino();
     this.calculateGhostPosition();
-  }
-
-  generateNextTetromino() {
-    const name = getRandomElement(TETROMINO_NAMES);
-    const matrix = TETROMINOES[name];
-    this.nextTetromino = {
-      name,
-      matrix,
-    };
   }
 
   moveTetrominoDown() {
@@ -120,6 +117,10 @@ export class Tetris {
     );
   }
 
+  isOutsideOfTopBoard(row) {
+    return this.tetromino.row + row < 0;
+  }
+
   isCollides(row, column) {
     return this.playField[this.tetromino.row + row]?.[
       this.tetromino.column + column
@@ -144,33 +145,20 @@ export class Tetris {
     this.generateTetromino();
   }
 
-  isOutsideOfTopBoard(row) {
-    return this.tetromino.row + row < 0;
-  }
-
   processFilledRows() {
     const filledLines = this.findFilledRows();
     this.removeFilledRows(filledLines);
     this.updateScore(filledLines.length);
   }
 
-  updateScore(clearedLines) {
-    if (clearedLines > 0) {
-      this.score += clearedLines * 100;
-      document.getElementById("score").innerText = this.score;
-
-      const newLevel = Math.floor(this.score / 1000);
-
-      if (newLevel > this.level) {
-        this.level = newLevel;
-        document.getElementById("level").innerText = this.level;
-        this.speed = Math.max(100, 700 - this.level * 10);
+  findFilledRows() {
+    const filledRows = [];
+    for (let row = 0; row < PLAYFIELD_ROWS; row++) {
+      if (this.playField[row].every((cell) => Boolean(cell))) {
+        filledRows.push(row);
       }
     }
-  }
-
-  getSpeed() {
-    return this.speed;
+    return filledRows;
   }
 
   removeFilledRows(filledRows) {
@@ -186,15 +174,23 @@ export class Tetris {
     this.playField[0] = new Array(PLAYFIELD_COLUMNS).fill(0);
   }
 
-  findFilledRows() {
-    const filledRows = [];
-    for (let row = 0; row < PLAYFIELD_ROWS; row++) {
-      if (this.playField[row].every((cell) => Boolean(cell))) {
-        filledRows.push(row);
+  updateScore(clearedLines) {
+    if (clearedLines > 0) {
+      this.score += clearedLines * 100;
+      document.getElementById("score").innerText = this.score;
+
+      const newLevel = Math.floor(this.score / 1000);
+
+      if (newLevel > this.level) {
+        this.level = newLevel;
+        document.getElementById("level").innerText = this.level;
+        this.speed = Math.max(100, 700 - this.level * 40);
       }
     }
+  }
 
-    return filledRows;
+  getSpeed() {
+    return this.speed;
   }
 
   calculateGhostPosition() {

@@ -9,13 +9,16 @@ import {
 
 class Game {
   constructor() {
+    this.isPlaying = false;
+    this.tetris = new Tetris();
+    this.player = new Player();
+
+    this.cells = document.querySelectorAll(".grid>div");
+    this.miniCells = document.querySelectorAll(".mini-grid>div");
+
     this.requestId = null;
     this.timeoutId = null;
-    this.tetris = new Tetris();
-    this.cells = document.querySelectorAll(".grid>div");
-    this.player = new Player();
-    this.isPlaying = false;
-    this.miniCells = document.querySelectorAll(".mini-grid>div");
+
     this.onKeydown = this.onKeydown.bind(this);
   }
 
@@ -27,7 +30,7 @@ class Game {
     if (this.isPlaying) return;
 
     this.isPlaying = true;
-    this.tetris = new Tetris(); // сброс состояния игры
+    this.tetris = new Tetris();
     this.cells.forEach((cell) => cell.removeAttribute("class"));
     document.getElementById("score").innerText = "0";
     document.getElementById("level").innerText = "0";
@@ -36,6 +39,18 @@ class Game {
     startButton.disabled = true;
 
     this.moveDown();
+  }
+
+  startLoop() {
+    this.timeoutId = setTimeout(
+      () => (this.requestId = requestAnimationFrame(() => this.moveDown())),
+      this.tetris.getSpeed()
+    );
+  }
+
+  stopLoop() {
+    cancelAnimationFrame(this.requestId);
+    clearTimeout(this.timeoutId);
   }
 
   onKeydown(event) {
@@ -67,6 +82,14 @@ class Game {
     }
   }
 
+  draw() {
+    this.cells.forEach((cell) => cell.removeAttribute("class"));
+    this.drawPlayField();
+    this.drawTetromino();
+    this.drawGhostTetromino();
+    this.drawNextTetromino();
+  }
+
   moveDown() {
     this.tetris.moveTetrominoDown();
     this.draw();
@@ -88,25 +111,6 @@ class Game {
     this.draw();
   }
 
-  draw() {
-    this.cells.forEach((cell) => cell.removeAttribute("class"));
-    this.drawPlayField();
-    this.drawTetromino();
-    this.drawGhostTetromino();
-    this.drawNextTetromino();
-  }
-
-  drawPlayField() {
-    for (let row = 0; row < PLAYFIELD_ROWS; row++) {
-      for (let column = 0; column < PLAYFIELD_COLUMNS; column++) {
-        if (!this.tetris.playField[row][column]) continue;
-        const name = this.tetris.playField[row][column];
-        const cellIndex = convertPositionToIndex(row, column);
-        this.cells[cellIndex].classList.add(name);
-      }
-    }
-  }
-
   rotate() {
     this.tetris.rotateTetromino();
     this.draw();
@@ -122,16 +126,15 @@ class Game {
     }
   }
 
-  startLoop() {
-    this.timeoutId = setTimeout(
-      () => (this.requestId = requestAnimationFrame(() => this.moveDown())),
-      this.tetris.getSpeed()
-    );
-  }
-
-  stopLoop() {
-    cancelAnimationFrame(this.requestId);
-    clearTimeout(this.timeoutId);
+  drawPlayField() {
+    for (let row = 0; row < PLAYFIELD_ROWS; row++) {
+      for (let column = 0; column < PLAYFIELD_COLUMNS; column++) {
+        if (!this.tetris.playField[row][column]) continue;
+        const name = this.tetris.playField[row][column];
+        const cellIndex = convertPositionToIndex(row, column);
+        this.cells[cellIndex].classList.add(name);
+      }
+    }
   }
 
   drawTetromino() {
@@ -165,9 +168,7 @@ class Game {
     }
   }
 
-  // Новый метод для отрисовки следующей фигуры
   drawNextTetromino() {
-    // Очищаем мини-сетку
     this.miniCells.forEach((cell) => cell.removeAttribute("class"));
 
     const nextTetromino = this.tetris.nextTetromino;
@@ -176,13 +177,11 @@ class Game {
     const matrix = nextTetromino.matrix;
     const matrixSize = matrix.length;
 
-    // Вычисляем смещение для центрирования фигуры
     const offset = {
       row: Math.floor((4 - matrixSize) / 2),
       col: Math.floor((4 - matrixSize) / 2),
     };
 
-    // Отрисовываем фигуру в мини-сетке
     for (let row = 0; row < matrixSize; row++) {
       for (let column = 0; column < matrixSize; column++) {
         if (!matrix[row][column]) continue;
@@ -198,9 +197,8 @@ class Game {
   gameOver() {
     this.isPlaying = false;
     this.stopLoop();
-    // Удаляем старый обработчик перед добавлением нового
+
     document.removeEventListener("keydown", this.onKeydown);
-    // Добавляем обработчик заново
     document.addEventListener("keydown", this.onKeydown);
 
     const leaderboardManager = new LeaderboardManager();
@@ -222,31 +220,25 @@ class Game {
   }
 }
 
-let game;
+(() => {
+  document.addEventListener("DOMContentLoaded", () => {
+    const letters = document.querySelectorAll(".letter");
+    letters.forEach((letter, index) => {
+      letter.style.setProperty("--letter-index", index);
+    });
 
-// Инициализация игры после загрузки DOM
-document.addEventListener("DOMContentLoaded", () => {
-  // Анимация букв
-  const letters = document.querySelectorAll(".letter");
-  letters.forEach((letter, index) => {
-    letter.style.setProperty("--letter-index", index);
+    const usernameDisplay = document.getElementById("username-display");
+    if (usernameDisplay) {
+      const username = localStorage.getItem("tetris.username");
+      usernameDisplay.textContent = username || "Гость";
+    }
+
+    const game = new Game();
+    game.initGame();
+
+    const startButton = document.querySelector("#start-button");
+    if (startButton) {
+      startButton.addEventListener("click", () => game.startGame());
+    }
   });
-
-  // Отображение имени пользователя
-  const usernameDisplay = document.getElementById("username-display");
-  if (usernameDisplay) {
-    const username = localStorage.getItem("tetris.username");
-    usernameDisplay.textContent = username || "Гость";
-  }
-
-  // Создание экземпляра игры
-  game = new Game();
-  game.initGame();
-
-  // Делаем функцию startGame доступной глобально
-  // window.startGame = () => game.startGame();
-  const startButton = document.querySelector("#start-button");
-  if (startButton) {
-    startButton.addEventListener("click", () => game.startGame());
-  }
-});
+})();
