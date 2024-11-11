@@ -25,6 +25,7 @@
           type="text"
           id="nickname"
           placeholder="Имя пользователя"
+          maxlength="20"
           required
         />
         <button type="submit">Готово!</button>
@@ -35,7 +36,7 @@
       function saveUsername(event) {
         event.preventDefault();
         const username = document.getElementById("nickname").value.trim();
-        if (username) {
+        if (username && username.length <= 20) {
           localStorage.setItem("tetris.username", username);
           window.location.href = "tetris.html";
         }
